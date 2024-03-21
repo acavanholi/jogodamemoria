@@ -2,55 +2,167 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jogo da Memória</title>
-  <link rel="stylesheet" href="./styles.css">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .memory-game {
+      display: grid;
+      grid-template-columns: repeat(6, 100px);
+      grid-template-rows: repeat(6, 100px);
+      gap: 10px;
+    }
+
+    .memory-card {
+      width: 100%;
+      height: 100%;
+      background-color: #77ffec; /* Cor do verso da carta */
+      perspective: 1000px;
+      cursor: pointer;
+    }
+
+    .front-face, .back-face {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      backface-visibility: hidden;
+      transition: transform 0.5s;
+    }
+
+    .memory-card.flip .front-face {
+      transform: rotateY(180deg);
+    }
+
+    .memory-card.flip .back-face {
+      transform: rotateY(0deg);
+    }
+  </style>
 </head>
 <body>
-  <section class="memory-game">
-    <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
-     <div class="memory-card" data-framework="react">
-      <img class="front-face" src="img/react.svg" alt="Face da Carta">
-      <img class="back-face" src="img/js-badge.svg" alt="Verso da Carta">
-    </div>
+  <div class="memory-game">
+    <!-- Cartas são criadas dinamicamente pelo JavaScript -->
+  </div>
 
-    <!-- Outras cartas aqui -->
+  <script>
+    const images = [
+      'https://em-content.zobj.net/source/microsoft/106/dog-face_1f436.png.jpg',
+      'https://em-content.zobj.net/source/microsoft/135/cat-face_1f431.png',
+      'https://em-content.zobj.net/source/microsoft/309/monkey-face_1f435.png',
+      'https://em-content.zobj.net/source/microsoft/94/pig-face_1f437.png',
+      'https://em-content.zobj.net/source/microsoft/74/fox-face_1f98a.png',
+      'https://em-content.zobj.net/source/microsoft/94/wolf-face_1f43a.png',
+      'https://em-content.zobj.net/source/microsoft/153/zebra-face_1f993.png',
+      'https://em-content.zobj.net/source/microsoft/106/giraffe-face_1f992.png',
+      'https://em-content.zobj.net/source/microsoft/135/panda-face_1f43c.png',
+      'https://em-content.zobj.net/source/microsoft/309/frog_1f438.png',
+      'https://em-content.zobj.net/source/microsoft/106/bear-face_1f43b.png',
+      'https://em-content.zobj.net/source/microsoft/94/hamster-face_1f439.png'
+    ];
 
-  </section>
-  <script src="./scripts.js"></script>
+    const memoryGame = document.querySelector('.memory-game');
+    let hasFlippedCard = false;
+    let firstCard, secondCard;
+    let lockBoard = false;
+    let score = 0;
+    let attempts = 0;
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add('flip');
+
+      if (!hasFlippedCard) {
+        // Primeiro clique
+        hasFlippedCard = true;
+        firstCard = this;
+        return;
+      }
+
+      // Segundo clique
+      secondCard = this;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      let isMatch = firstCard.querySelector('.back-face').src === secondCard.querySelector('.back-face').src;
+
+      isMatch ? disableCards() : unflipCards();
+
+      attempts++;
+      updateScore();
+    }
+
+    function disableCards() {
+      firstCard.removeEventListener('click', flipCard);
+      secondCard.removeEventListener('click', flipCard);
+
+      score++;
+      resetBoard();
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+
+      setTimeout(() => {
+        firstCard.classList.remove('flip');
+        secondCard.classList.remove('flip');
+
+        resetBoard();
+      }, 1000);
+    }
+
+    function resetBoard() {
+      [hasFlippedCard, lockBoard] = [false, false];
+      [firstCard, secondCard] = [null, null];
+    }
+
+    function updateScore() {
+      document.getElementById('score').innerText = `Placar: ${score}`;
+      document.getElementById('attempts').innerText = `Tentativas: ${attempts}`;
+    }
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+
+      return array;
+    }
+
+    const cards = [...images, ...images];
+    shuffle(cards);
+
+    cards.forEach((image, index) => {
+      const card = document.createElement('div');
+      card.classList.add('memory-card');
+
+      const innerHTML = `
+        <img class="front-face" src="${image}" alt="Carta ${index + 1}">
+        <img class="back-face" src="images/back.jpg" alt="Verso da Carta">
+      `;
+
+      card.innerHTML = innerHTML;
+      card.addEventListener('click', flipCard);
+
+      memoryGame.appendChild(card);
+    });
+  </script>
+  <div id="score">Placar: 0</div>
+  <div id="attempts">Tentativas: 0</div>
 </body>
 </html>
+
+
